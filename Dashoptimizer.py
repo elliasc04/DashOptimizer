@@ -14,7 +14,7 @@ from collections import deque
 #INITIALIZATION/DATA READING===================================================================
 
 # Delivery ID, Order Created at, Food Ready Time, Pickup Lat, Pickup Long, Dropoff Lat, Dropoff Long
-deliverydata_file = open("./IEMS313_ProjectData.csv", mode='r', encoding='utf-8', errors='ignore')
+deliverydata_file = open("./DasherOrders.csv", mode='r', encoding='utf-8', errors='ignore')
 deliverydata = list(csv.reader(deliverydata_file))[1:]
 
 #Dasher ID, Dasher Lat, Dasher Long
@@ -22,8 +22,8 @@ dasher_file = open("./DasherLocations.csv", mode='r', encoding='utf-8', errors='
 dasherdata = list(csv.reader(dasher_file))[1:]
 
 # Load the CSV files, skipping the first row
-dasher_locations = pd.read_csv('DasherLocations.csv')
-delivery_data = pd.read_csv('IEMS313_ProjectData.csv')
+delivery_data = pd.read_csv("./DasherOrders.csv")
+dasher_locations = pd.read_csv("./DasherLocations.csv")
 
 delivery_data = delivery_data.head(20)
 
