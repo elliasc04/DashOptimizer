@@ -140,8 +140,8 @@ def findAverageDeliveryTime(ind):
     print(deliverytime[ind-1])
     # print([delivery[1] for delivery in deliverytime if delivery[0] <= 45])
 
-#PROBLEM ONE========================================================================
-
+#HEURISTIC METHOD ONE========================================================================
+#assign orders to the nearest available dasher, base naive solution. 
 
 
 
@@ -212,8 +212,8 @@ def methodOne(deliveryinfolist: list[list], dasherslist: list[list]):
 
 
 
-#PROBLEM TWO:==============================================================
-
+#HEURISTIC METHOD TWO:==============================================================
+# same as method one, naive presolve by sorting order list AND supplying all 100 dashers to generate diagnostic data for delivery times using this method
 
 def methodTwo(deliveryinfolist: list[list], dasherslist: list[list]):
 
@@ -289,8 +289,9 @@ def methodTwo(deliveryinfolist: list[list], dasherslist: list[list]):
 
     print(len(deliverydurations))
 
-# PROBLEM THREE: =========================================================================================
-
+# OPTIMIZED METHOD ONE: =========================================================================================
+# utilizes presolution via parallelized route generation and individualized, iterative route evaluation to generate the minimum delivery time.
+# if the minimum delivery time is > 45 (arbitrary number), prune. <-- pruning rules
 # Generate all possible routes with 1, 2, 3, or 4 deliveries
 def generate_routes(delivery_data):
     routes = []
@@ -305,6 +306,7 @@ def evaluate_route(route):
     total_time = 0
     previous_dropoff_time = None
 
+    # for generated routes, calculate total delivery time for each route.
     for i, delivery_id in enumerate(route):
         delivery = delivery_data.loc[delivery_id]
         pickup_time = delivery['Order Created at']
@@ -325,6 +327,7 @@ def evaluate_route(route):
         max_delivery_time = max(max_delivery_time, delivery_duration)
         previous_dropoff_time = dropoff_time
 
+    #if delivery time is greater than 45, prune. 
     if max_delivery_time <= 45:
         total_time = (previous_dropoff_time - delivery_data.loc[route[0], 'Food Ready Time ']).total_seconds() / 60
         efficiency = len(route) / total_time
@@ -431,8 +434,9 @@ def methodThree():
         print("Comparing to the heuristic assignments in Questions 1 and 2")
         print('The average deliveries per hour per dasher for the path-wise formulation in Question 3, 1, is higher than that for the heuristic assignments in Question 1, 0.376, and Question 2, 0.384. This makes sense, since this path-wise formulation is designed to optimize the delivery routes, while the heuristic assignments follow a brute force approach in assigning deliveries to dashers.')
 
-# PROBLEM FOUR: ==========================================================================================
-
+# OPTIMIZED METHOD TWO: ==========================================================================================
+# attempts to summarize entire problem into one MILP formulation. Dataframes make calculations easier, and 
+# constraints are summarized in comments below.
 def methodFour(numDeliveries: int, numDashers: int):
     deliveries = deliverydata[0:numDeliveries]
     dashers = dasherdata[0:numDashers]
@@ -500,5 +504,6 @@ def methodFour(numDeliveries: int, numDashers: int):
 # print("METHOD THREE:\n")
 # methodThree()
 # print("METHOD FOUR:\n")
-# methodFour(10,10)
+methodFour(100,10)
 print("done")
+
