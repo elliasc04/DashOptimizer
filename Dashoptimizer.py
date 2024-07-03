@@ -91,43 +91,6 @@ def findNearest(order:list, available: list):
 
 
 
-#May or may not work properly I have no idea
-def findOptimalNaive(order: list, available: list):
-    #demarcate food ready time
-    pickuptime = order[2]
-
-    #find the time it takes to travel from pickup to dropoff
-    orderlat, orderlon = order[3], order[4]
-    droplat, droplon = order[5], order[6]
-    ordertraveltime = calcTime(haversine((orderlat, orderlon),(droplat, droplon)))
-    
-    #initialize max variables to update the optimal dasher & relevant info
-    minresult = inf
-    optimalDasher = None
-    index = 0
-    iterations = -1
-    deliverytime = 0
-
-    for dasher in available:
-        iterations += 1
-
-        #get where the dasher is right now
-        dasherlat, dasherlon = dasher[1], dasher[2]
-        dasherstarttime = dasher[4]
-        traveltopickup = calcTime(haversine((orderlat, orderlon), (dasherlat, dasherlon)))  
-        arrivaltime = dasherstarttime + traveltopickup
-        if arrivaltime < pickuptime:
-            finishtime = pickuptime + ordertraveltime
-        else:
-            finishtime = arrivaltime + ordertraveltime
-        if finishtime < minresult:
-            minresult = finishtime
-            optimalDasher = dasher
-            index = iterations
-            deliverytime = finishtime - order[1]
-    return [optimalDasher, minresult, index, deliverytime, droplat, droplon]
-
-
 #takes distances in KM, which haversine returns by default, and returns number of minutes
 def calcTime(distance: float):
     return ((distance*1000)/4.5)/60
@@ -140,159 +103,19 @@ def findAverageDeliveryTime(ind):
     print(deliverytime[ind-1])
     # print([delivery[1] for delivery in deliverytime if delivery[0] <= 45])
 
-#HEURISTIC METHOD ONE========================================================================
-#assign orders to the nearest available dasher, base naive solution. 
-
-
-
-def methodOne(deliveryinfolist: list[list], dasherslist: list[list]):
-
-    dashers = copy.deepcopy(dasherslist)
-    deliveryinfo = copy.deepcopy(deliveryinfolist)
-
-    #initialize arrays to hold delivery durations and delivery dropoff times
-    deliverydurations = []
-    endingtimes = []
-
-    #sort delivery orders by time created 
-    createddeliveryinfo = deque(sorted(deliveryinfo, key=lambda x: x[1]))
-
-    #add extra field to track how many orders each dasher has
-    for dasher in dashers:
-
-        #let index 3 represent the amount of orders they currently have
-        dasher.append(0)
-
-        #let index 4 represent the time at which they are done with all current orders
-        dasher.append(0)
-
-    #assign orders to dasher
-    while createddeliveryinfo:
-
-        #get next order and delete from sorted list of orders
-        order = createddeliveryinfo.popleft()
-
-        #get the nearest dasher that doesn't already have 4 deliveries
-        dashers = [dasher for dasher in dashers if dasher[3] < 4]
-
-        #get all available dashers at time of order creation
-        availabledashers = [dasher for dasher in dashers if dasher[4] <= order[1]]
-
-        #find the nearest dasher. If there are no available dashers, plug in all dashers. 
-        if availabledashers:
-            nearestdasher, nextavailable, ind, ordertraveltime, droplat, droplon = findNearest(order, availabledashers)
-        else:
-            nearestdasher, nextavailable, ind, ordertraveltime, droplat, droplon = findOptimalNaive(order, dashers)
-
-        #track the order's delivery time
-        deliverydurations.append(ordertraveltime)
-        endingtimes.append(nextavailable)
-
-        #update the dasher's number of deliveries, when they will be next available, and their new location after dropping off
-        dashers[ind][1] = droplat
-        dashers[ind][2] = droplon
-        dashers[ind][3] += 1
-        dashers[ind][4] = nextavailable
-    
-    #calculate time from first order creation to last delivery dropoff in minutes
-    mindeliverytime = min([delivery[1] for delivery in deliverydata])
-    maxdeliverytime = max(endingtimes)
-    totalruntime = maxdeliverytime - mindeliverytime
-    
-    print("Average Delivery Duration:================")
-    print(mean(deliverydurations))
-
-    print("Average Deliveries per Hour:==============")
-    print(len(deliverydata)/(totalruntime/60))
-
-    print("Longest Delivery Duration:================")
-    print(max(deliverydurations))
-
-
-
-
-
-#HEURISTIC METHOD TWO:==============================================================
-# same as method one, naive presolve by sorting order list AND supplying all 100 dashers to generate diagnostic data for delivery times using this method
-
-def methodTwo(deliveryinfolist: list[list], dasherslist: list[list]):
-
-    dashers = copy.deepcopy(dasherslist)
-    deliveryinfo = copy.deepcopy(deliveryinfolist)
-    
-    #initialize arrays to hold delivery durations, deliveries made(by who), and delivery dropoff times
-    deliverydurations = []
-    endingtimes = []
-
-    #sort delivery orders by time created 
-    createddeliveryinfo = deque(sorted(deliveryinfo, key=lambda x: x[1]))
-
-    #add extra field to track how many orders each dasher has
-    for dasher in dashers:
-        #let index 3 represent the amount of orders they currently have
-        dasher.append(0)
-
-        #let index 4 represent the time at which they are done with all current orders
-        dasher.append(0)
-
-    #assign orders to dasher
-    while createddeliveryinfo:
-
-        #get next order and delete from sorted list of orders
-        order = createddeliveryinfo.popleft()
-
-        #get all available dashers at time of order creation
-        availabledashers = [dasher for dasher in dashers if dasher[4] <= order[1]]
-
-        #find the nearest dasher. If there are no available dashers, plug in all dashers. 
-        if availabledashers:
-            nearestdasher, nextavailable, ind, ordertraveltime, droplat, droplon = findNearest(order, availabledashers)
-        else:
-            nearestdasher, nextavailable, ind, ordertraveltime, droplat, droplon = findOptimalNaive(order, dashers)
-
-        #track the order's delivery time
-        deliverydurations.append(ordertraveltime)
-        endingtimes.append(nextavailable)
-
-        #update the dasher's number of deliveries, when they will be next available, and their new location after dropping off
-        dashers[ind][1] = droplat
-        dashers[ind][2] = droplon
-        dashers[ind][3] += 1
-        dashers[ind][4] = nextavailable
-    
-    dasherIDs = [dasher[0] for dasher in dashers]
-    dasherfrequencies = [dasher[3] for dasher in dashers]
-
-    #calculate time from first order creation to last delivery dropoff in minutes
-    mindeliverytime = min([delivery[1] for delivery in deliverydata])
-    maxdeliverytime = max(endingtimes)
-    totalruntime = maxdeliverytime - mindeliverytime
-    
-    print("Average Delivery Duration:================")
-    print(mean(deliverydurations))
-
-    print("Average Deliveries per Hour:==============")
-    print(len(deliverydata)/(totalruntime/60))
-
-    print("Longest Delivery Duration:================")
-    print(max(deliverydurations))
-
-    tick_label = [f"{dasherid}" for dasherid in dasherIDs]
-    plt.bar(dasherIDs, dasherfrequencies, tick_label = tick_label,
-        width = 0.8,)
-    
-    plt.xlabel('Dasher ID')
-    plt.ylabel('# of Orders')
-    plt.title('Distribution of Orders Across Dashers')
-
-    plt.show()
-
-    print(len(deliverydurations))
 
 # OPTIMIZED METHOD ONE: =========================================================================================
-# utilizes presolution via parallelized route generation and individualized, iterative route evaluation to generate the minimum delivery time.
-# if the minimum delivery time is > 45 (arbitrary number), prune. <-- pruning rules
+
+
+# This is a suboptimal solution that utilizes presolution via parallelized route generation and individualized, 
+# iterative route evaluation to generate the minimum delivery time.
+
+
+# OPTIMIZED METHOD ONE: =========================================================================================
+
+
 # Generate all possible routes with 1, 2, 3, or 4 deliveries
+# if the minimum delivery time is > 45 (arbitrary number), prune. <-- pruning rules
 def generate_routes(delivery_data):
     routes = []
     for r in range(1, 5):
@@ -397,7 +220,7 @@ def optimize_routes_iterative(valid_routes, dashers, delivery_data):
 
     return model, x, prev_avg_deliveries_per_hour, converged, _
 
-def methodThree():
+def OptimalSubTour():
     if __name__ == '__main__':
         start_time = time.time()  # Record the start time
 
@@ -437,7 +260,7 @@ def methodThree():
 # OPTIMIZED METHOD TWO: ==========================================================================================
 # attempts to summarize entire problem into one MILP formulation. Dataframes make calculations easier, and 
 # constraints are summarized in comments below.
-def methodFour(numDeliveries: int, numDashers: int):
+def OptimalMILP(numDeliveries: int, numDashers: int):
     deliveries = deliverydata[0:numDeliveries]
     dashers = dasherdata[0:numDashers]
 
@@ -498,12 +321,8 @@ def methodFour(numDeliveries: int, numDashers: int):
     print(f"Objective value: {model.ObjVal}")
 
 # print("METHOD ONE:\n")
-# methodOne(deliverydata, dasherdata)
-# print("METHOD TWO:\n")
-# methodTwo(deliverydata, dasherdata)
-# print("METHOD THREE:\n")
-# methodThree()
-# print("METHOD FOUR:\n")
-methodFour(100,10)
+# OptimalSubTour()
+print("METHOD TWO:\n")
+OptimalMILP(100,10)
 print("done")
 
