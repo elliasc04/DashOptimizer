@@ -255,7 +255,7 @@ def OptimalSubTour():
         
         # Comparing to the heuristic assignments in Questions 1 and 2
         print("Comparing to the heuristic assignments in Questions 1 and 2")
-        print('The average deliveries per hour per dasher for the path-wise formulation in Question 3, 1, is higher than that for the heuristic assignments in Question 1, 0.376, and Question 2, 0.384. This makes sense, since this path-wise formulation is designed to optimize the delivery routes, while the heuristic assignments follow a brute force approach in assigning deliveries to dashers.')
+        print('The average deliveries per hour per dasher for the path-wise formulation in MILP approach 1 = 1, is higher than that for heuristic approach 1 = 0.376, and heuristic approach 2 = 0.384.')
 
 # OPTIMIZED METHOD TWO: ==========================================================================================
 # attempts to summarize entire problem into one MILP formulation. Dataframes make calculations easier, and 
